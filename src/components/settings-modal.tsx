@@ -79,10 +79,10 @@ export function SettingsModal() {
                             value={localKeys.optimizerModel || 'auto'}
                             onValueChange={(val) => setLocalKeys({ ...localKeys, optimizerModel: val })}
                         >
-                            <SelectTrigger>
+                            <SelectTrigger className="bg-white dark:bg-neutral-900 border-input">
                                 <SelectValue placeholder="Select logic" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-white dark:bg-neutral-900 border-border shadow-xl z-[100]">
                                 <SelectItem value="auto">Auto (Best Paid &gt; Free)</SelectItem>
                                 <SelectItem value="claude">Force Claude (Best Quality)</SelectItem>
                                 <SelectItem value="openai">Force OpenAI</SelectItem>
@@ -94,13 +94,35 @@ export function SettingsModal() {
                     </div>
 
                     {localKeys.optimizerModel === 'openrouter' && (
-                        <div className="py-3 px-4 rounded-md bg-destructive/15 text-destructive border border-destructive/20 flex gap-2 items-start">
-                            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
-                            <div className="text-xs">
-                                <strong className="font-semibold block mb-0.5">Free Tier Warning</strong>
-                                Free models (DeepSeek/Qwen) can be unstable or return "No endpoints found". We automatically retry alternatives, but paid keys are recommended for reliability.
+                        <>
+                            <div className="py-3 px-4 rounded-md bg-destructive/15 text-destructive border border-destructive/20 flex gap-2 items-start">
+                                <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                                <div className="text-xs">
+                                    <strong className="font-semibold block mb-0.5">Free Tier Warning</strong>
+                                    Free models can be unstable or return "No endpoints found". We automatically retry alternatives, but paid keys are recommended for reliability.
+                                </div>
                             </div>
-                        </div>
+
+                            <div className="space-y-2 bg-muted/30 p-3 rounded-md border">
+                                <Label>Free Model Preference</Label>
+                                <Select
+                                    value={localKeys.freeModelPreference || 'auto'}
+                                    onValueChange={(val) => setLocalKeys({ ...localKeys, freeModelPreference: val })}
+                                >
+                                    <SelectTrigger className="bg-white dark:bg-neutral-900 border-input">
+                                        <SelectValue placeholder="Select free model" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white dark:bg-neutral-900 border-border shadow-xl z-[100]">
+                                        <SelectItem value="auto">Auto (Try all in order)</SelectItem>
+                                        <SelectItem value="arcee-ai/trinity-large-preview:free">Trinity Large Preview (Primary)</SelectItem>
+                                        <SelectItem value="z.ai/glm-4.5-air:free">GLM 4.5 Air (Secondary)</SelectItem>
+                                        <SelectItem value="tngtech/deepseek-r1t2-chimera:free">DeepSeek Chimera (Tertiary)</SelectItem>
+                                        <SelectItem value="liquid/lfm-2.5-1.2b-instruct:free">Liquid LFM (Fast Fallback)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-xs text-muted-foreground">"Auto" cycles through all models if one fails.</p>
+                            </div>
+                        </>
                     )}
 
                     <div className="space-y-2">

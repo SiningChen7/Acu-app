@@ -57,6 +57,7 @@ export default function ToolPage() {
                     'x-openai-key': apiKeys.openai,
                     'x-google-key': apiKeys.google,
                     'x-openrouter-key': apiKeys.openrouter,
+                    'x-free-model-preference': apiKeys.freeModelPreference || 'auto',
                 },
                 body: JSON.stringify({
                     originalPrompt,

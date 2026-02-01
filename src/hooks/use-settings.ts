@@ -8,6 +8,7 @@ export interface ApiKeys {
   google: string;
   openrouter: string;
   optimizerModel: string; // 'auto', 'claude', 'openai', 'gemini', 'openrouter'
+  freeModelPreference?: string; // Specific free model or 'auto'
 }
 
 const STORAGE_KEY = 'acu_api_keys';
@@ -20,6 +21,7 @@ export function useSettings() {
     google: '',
     openrouter: '',
     optimizerModel: 'auto',
+    freeModelPreference: 'auto',
   });
   const [loading, setLoading] = useState(true);
 
@@ -34,6 +36,7 @@ export function useSettings() {
           google: parsed.google || '',
           openrouter: parsed.openrouter || '',
           optimizerModel: parsed.optimizerModel || 'auto',
+          freeModelPreference: parsed.freeModelPreference || 'auto',
         });
       } catch (e) {
         console.error("Failed to parse settings", e);

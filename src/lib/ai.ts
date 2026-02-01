@@ -5,19 +5,12 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google';
 
 export type SupportedProvider = 'anthropic' | 'openai' | 'google' | 'openrouter';
 
-// Jan 2026: Verified working free models from openrouter.ai/collections/free-models
+// Jan 31 2026: Active free models with verified endpoints
 export const OPENROUTER_FREE_MODELS = [
-  'google/gemini-2.0-flash-lite-preview-02-05:free', // Newest reliable free
-  'deepseek/deepseek-r1-distill-llama-70b:free',   // Reliable
-  'qwen/qwen-2.7-72b-instruct:free',               // Strong fallback
-  'nvidia/llama-3.1-nemotron-70b-instruct:free',   // Alternative
-];
-
-// Fallback list specifically for "limit reached" or "no endpoints" retry logic
-export const FALLBACK_FREE_MODELS = [
-  'google/gemini-2.0-pro-exp-02-05:free',
-  'microsoft/phi-4:free',
-  'meta-llama/llama-3.3-70b-instruct:free'
+  'arcee-ai/trinity-large-preview:free',      // Primary - strong reasoning/creative
+  'z.ai/glm-4.5-air:free',                    // Secondary - reliable
+  'tngtech/deepseek-r1t2-chimera:free',       // Tertiary - good fallback
+  'liquid/lfm-2.5-1.2b-instruct:free',        // Fallback - small/fast
 ];
 
 export function validateKeys(keys: { anthropic?: string; openai?: string; google?: string; openrouter?: string }) {
@@ -36,6 +29,7 @@ export function getSmartestModel(keys: {
   google?: string;
   openrouter?: string;
   optimizerPreference?: string; // 'auto', 'claude', 'openai', 'gemini', 'openrouter'
+  freeModelPreference?: string; // Specific free model or 'auto'
 }) {
   const validity = validateKeys(keys);
   const pref = keys.optimizerPreference || 'auto';
@@ -46,7 +40,12 @@ export function getSmartestModel(keys: {
   if (pref === 'claude' && validity.anthropic) return { model: createClaude(keys.anthropic!), provider: 'anthropic' };
   if (pref === 'openai' && validity.openai) return { model: createGPT(keys.openai!), provider: 'openai' };
   if (pref === 'gemini' && validity.google) return { model: createGemini(keys.google!), provider: 'google' };
-  if (pref === 'openrouter' && validity.openrouter) return { model: createOpenRouter(keys.openrouter!, OPENROUTER_FREE_MODELS[0]), provider: 'openrouter' };
+  if (pref === 'openrouter' && validity.openrouter) {
+    const selectedModel = keys.freeModelPreference && keys.freeModelPreference !== 'auto'
+      ? keys.freeModelPreference
+      : OPENROUTER_FREE_MODELS[0];
+    return { model: createOpenRouter(keys.openrouter!, selectedModel), provider: 'openrouter' };
+  }
 
   // 2. Automatic Priority (Paid > Free)
 
@@ -71,7 +70,10 @@ export function getSmartestModel(keys: {
   // OpenRouter (Free Fallback)
   if (validity.openrouter) {
     console.log('Using OpenRouter free tier (no paid keys found).');
-    return { model: createOpenRouter(keys.openrouter!, OPENROUTER_FREE_MODELS[0]), provider: 'openrouter' };
+    const selectedModel = keys.freeModelPreference && keys.freeModelPreference !== 'auto'
+      ? keys.freeModelPreference
+      : OPENROUTER_FREE_MODELS[0];
+    return { model: createOpenRouter(keys.openrouter!, selectedModel), provider: 'openrouter' };
   }
 
   return null;

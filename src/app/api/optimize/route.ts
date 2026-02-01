@@ -1,5 +1,5 @@
 import { generateText } from 'ai';
-import { getSmartestModel, validateKeys, createOpenRouter, OPENROUTER_FREE_MODELS, FALLBACK_FREE_MODELS } from '@/lib/ai';
+import { getSmartestModel, validateKeys, createOpenRouter, OPENROUTER_FREE_MODELS } from '@/lib/ai';
 import { OPTIMIZER_SYSTEM_PROMPT } from '@/lib/prompts';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
@@ -24,13 +24,15 @@ export async function POST(req: Request) {
     const openaiKey = req.headers.get('x-openai-key') || undefined;
     const googleKey = req.headers.get('x-google-key') || undefined;
     const openrouterKey = req.headers.get('x-openrouter-key') || undefined;
+    const freeModelPreference = req.headers.get('x-free-model-preference') || undefined;
 
     const selection = getSmartestModel({
       anthropic: anthropicKey,
       openai: openaiKey,
       google: googleKey,
       openrouter: openrouterKey,
-      optimizerPreference
+      optimizerPreference,
+      freeModelPreference
     });
 
     if (!selection) {
@@ -64,8 +66,8 @@ export async function POST(req: Request) {
       if (provider === 'openrouter' && openrouterKey) {
         console.log("Attempting OpenRouter fallback models...");
 
-        // Combine all reliable free models excluding the first one (already tried)
-        const retryModels = [...OPENROUTER_FREE_MODELS.slice(1), ...FALLBACK_FREE_MODELS];
+        // Try remaining free models in order
+        const retryModels = OPENROUTER_FREE_MODELS.slice(1);
 
         for (const modelId of retryModels) {
           try {
@@ -84,7 +86,7 @@ export async function POST(req: Request) {
         }
 
         return NextResponse.json(
-          { error: "All free models are currently busy or unavailable. Please try again later or use a paid key (Anthropic/OpenAI/Gemini) for better reliability." },
+          { error: "Free model unavailable (no active providers). Tried all alternatives. Pick another in Settings or use a paid key for reliability." },
           { status: 503 }
         );
       }
